@@ -1,0 +1,15 @@
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\bin\Debug\net9.0\AssetManagement.Application.deps.json
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\bin\Debug\net9.0\AssetManagement.Application.dll
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\bin\Debug\net9.0\AssetManagement.Application.pdb
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\bin\Debug\net9.0\AssetManagement.Domain.dll
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\bin\Debug\net9.0\AssetManagement.Domain.pdb
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\AssetManagement.Application.csproj.AssemblyReference.cache
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\AssetManagement.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\AssetManagement.Application.AssemblyInfoInputs.cache
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\AssetManagement.Application.AssemblyInfo.cs
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\AssetManagement.Application.csproj.CoreCompileInputs.cache
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\AssetMan.546BE579.Up2Date
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\AssetManagement.Application.dll
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\refint\AssetManagement.Application.dll
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\AssetManagement.Application.pdb
+C:\Users\anike\Desktop\Cursor\AssetManagement.Application\obj\Debug\net9.0\ref\AssetManagement.Application.dll

@@ -1,0 +1,11 @@
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\bin\Debug\net9.0\AssetManagement.Domain.deps.json
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\bin\Debug\net9.0\AssetManagement.Domain.dll
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\bin\Debug\net9.0\AssetManagement.Domain.pdb
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\obj\Debug\net9.0\AssetManagement.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\obj\Debug\net9.0\AssetManagement.Domain.AssemblyInfoInputs.cache
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\obj\Debug\net9.0\AssetManagement.Domain.AssemblyInfo.cs
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\obj\Debug\net9.0\AssetManagement.Domain.csproj.CoreCompileInputs.cache
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\obj\Debug\net9.0\AssetManagement.Domain.dll
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\obj\Debug\net9.0\refint\AssetManagement.Domain.dll
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\obj\Debug\net9.0\AssetManagement.Domain.pdb
+C:\Users\anike\Desktop\Cursor\AssetManagement.Domain\obj\Debug\net9.0\ref\AssetManagement.Domain.dll

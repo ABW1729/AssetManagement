@@ -1,0 +1,237 @@
+@page "/assets"
+@attribute [Authorize]
+@using AssetManagement.Application.Services
+@using AssetManagement.Domain.Entities
+@using AssetManagement.Domain.Enums
+@inject IAssetsService AssetsService
+@inject IEmployeesService EmployeesService
+
+<h3>Assets</h3>
+
+<div class="row g-2 mb-2">
+	<div class="col-md-3">
+		<input @bind=search class="form-control" placeholder="Search name or serial" />
+	</div>
+    <div class="col-md-3">
+		<input @bind=typeFilter class="form-control" placeholder="Type" />
+	</div>
+    <div class="col-md-3">
+		<select class="form-select" @bind=statusFilter>
+			<option value="">All Status</option>
+			@foreach (var s in Enum.GetValues<AssetStatus>())
+			{
+				<option value="@s">@s</option>
+			}
+		</select>
+	</div>
+    <div class="col-md-3">
+        <select class="form-select" @bind=assignedEmployeeId>
+            <option value="">All Employees</option>
+            @foreach (var e in employees)
+            {
+                <option value="@e.Id">@e.FullName</option>
+            }
+        </select>
+    </div>
+	<div class="col-md-2 form-check d-flex align-items-center">
+		<input class="form-check-input" type="checkbox" @bind="spareOnly" />
+		<label class="form-check-label ms-2">Spare only</label>
+	</div>
+	<div class="col-md-1">
+		<button class="btn btn-outline-secondary" @onclick="LoadAsync">Filter</button>
+	</div>
+</div>
+
+<button class="btn btn-primary mb-2" @onclick="ShowAdd">Add Asset</button>
+
+@if (isEditing)
+{
+    <EditForm Model="editModel" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+		<div class="row g-2">
+			<div class="col-md-3">
+				<InputText class="form-control" @bind-Value="editModel.Name" placeholder="Name" />
+			</div>
+			<div class="col-md-2">
+				<InputText class="form-control" @bind-Value="editModel.AssetType" placeholder="Type" />
+			</div>
+			<div class="col-md-3">
+				<InputText class="form-control" @bind-Value="editModel.MakeModel" placeholder="Make/Model" />
+			</div>
+			<div class="col-md-2">
+				<InputText class="form-control" @bind-Value="editModel.SerialNumber" placeholder="Serial" />
+			</div>
+			<div class="col-md-2">
+				<InputSelect class="form-select" @bind-Value="editModel.Condition">
+					@foreach (var c in Enum.GetValues<AssetCondition>())
+					{
+						<option value="@c">@c</option>
+					}
+				</InputSelect>
+			</div>
+		</div>
+		<div class="row g-2 mt-1">
+			<div class="col-md-2">
+				<InputDate class="form-control" @bind-Value="editModel.PurchaseDate" />
+			</div>
+			<div class="col-md-2">
+				<InputDate class="form-control" @bind-Value="editModel.WarrantyExpiryDate" />
+			</div>
+			<div class="col-md-2">
+				<InputSelect class="form-select" @bind-Value="editModel.Status">
+					@foreach (var s in Enum.GetValues<AssetStatus>())
+					{
+						<option value="@s">@s</option>
+					}
+				</InputSelect>
+			</div>
+			<div class="col-md-2 form-check d-flex align-items-center">
+				<input class="form-check-input" type="checkbox" @bind="editModel.IsSpare" />
+				<label class="form-check-label ms-2">Spare</label>
+			</div>
+			<div class="col-md-4">
+				<InputTextArea class="form-control" @bind-Value="editModel.Specifications" placeholder="Specifications" />
+			</div>
+		</div>
+		<div class="mt-2">
+			<button type="submit" class="btn btn-success">Save</button>
+			<button type="button" class="btn btn-secondary ms-2" @onclick="CancelEdit">Cancel</button>
+		</div>
+	</EditForm>
+}
+
+<table class="table table-striped">
+    <thead>
+		<tr>
+            <th><a href="#" @onclick="() => SortBy(SortByName)">Name</a></th>
+            <th><a href="#" @onclick="() => SortBy(SortByType)">Type</a></th>
+            <th><a href="#" @onclick="() => SortBy(SortBySerial)">Serial</a></th>
+            <th>Condition</th>
+            <th><a href="#" @onclick="() => SortBy(SortByStatus)">Status</a></th>
+            <th>Spare</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var a in items)
+		{
+			<tr>
+				<td>@a.Name</td>
+				<td>@a.AssetType</td>
+				<td>@a.SerialNumber</td>
+				<td>@a.Condition</td>
+				<td>@a.Status</td>
+				<td>@(a.IsSpare ? "Yes" : "No")</td>
+				<td>
+					<button class="btn btn-sm btn-outline-primary" @onclick="(() => Edit(a))">Edit</button>
+					<button class="btn btn-sm btn-outline-danger ms-1" @onclick="(() => DeleteAsync(a.Id))">Delete</button>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+<div>
+	<button class="btn btn-outline-secondary" @onclick="PrevPage" disabled="@(_page==1)">Prev</button>
+	<span class="mx-2">Page @_page</span>
+	<button class="btn btn-outline-secondary" @onclick="NextPage" disabled="@(items.Count < _pageSize)">Next</button>
+</div>
+
+@code {
+	private List<Asset> items = new();
+	private string? search;
+    private string? typeFilter;
+	private AssetStatus? statusFilter;
+	private bool? spareOnly;
+    private int? assignedEmployeeId;
+    private string? sort;
+    private bool sortDesc;
+    private List<Employee> employees = new();
+	private int _page = 1;
+	private int _pageSize = 10;
+	private bool isEditing = false;
+	private Asset editModel = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadAsync();
+	}
+
+	private async Task LoadAsync()
+	{
+        if (employees.Count == 0)
+        {
+            employees = (await EmployeesService.GetAsync(null, 1, 500)).Items.ToList();
+        }
+        var result = await AssetsService.GetAsync(search, typeFilter, statusFilter, spareOnly, assignedEmployeeId, sort, sortDesc, _page, _pageSize);
+		items = result.Items.ToList();
+		StateHasChanged();
+	}
+
+	private void ShowAdd()
+	{
+		isEditing = true;
+		editModel = new Asset { Condition = AssetCondition.Good, Status = AssetStatus.Available };
+	}
+
+	private void Edit(Asset a)
+	{
+		isEditing = true;
+		editModel = new Asset
+		{
+			Id = a.Id,
+			Name = a.Name,
+			AssetType = a.AssetType,
+			MakeModel = a.MakeModel,
+			SerialNumber = a.SerialNumber,
+			PurchaseDate = a.PurchaseDate,
+			WarrantyExpiryDate = a.WarrantyExpiryDate,
+			Condition = a.Condition,
+			Status = a.Status,
+			IsSpare = a.IsSpare,
+			Specifications = a.Specifications
+		};
+	}
+
+	private void CancelEdit() => isEditing = false;
+
+	private async Task SaveAsync()
+	{
+		if (editModel.Id == 0)
+			await AssetsService.CreateAsync(editModel);
+		else
+			await AssetsService.UpdateAsync(editModel);
+		isEditing = false;
+		await LoadAsync();
+	}
+
+	private async Task DeleteAsync(int id)
+	{
+		await AssetsService.DeleteAsync(id);
+		await LoadAsync();
+	}
+
+	private async Task PrevPage()
+	{
+		if (_page > 1) { _page--; await LoadAsync(); }
+	}
+
+	private async Task NextPage()
+	{
+		_page++; await LoadAsync();
+	}
+
+    private const string SortByName = "name";
+    private const string SortByType = "type";
+    private const string SortBySerial = "serial";
+    private const string SortByStatus = "status";
+
+    private async Task SortBy(string field)
+    {
+        if (sort == field) sortDesc = !sortDesc; else { sort = field; sortDesc = false; }
+        await LoadAsync();
+    }
+}
+
+

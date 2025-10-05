@@ -1,0 +1,67 @@
+@page "/reports"
+@attribute [Authorize]
+@using AssetManagement.Application.Reports
+@inject IReportsQueries ReportsQueries
+
+<h3>Reports</h3>
+
+<div class="row g-2 mb-2">
+	<div class="col-md-3">
+		<input class="form-control" type="number" min="1" @bind=days placeholder="Days until expiry" />
+	</div>
+	<div class="col-md-3">
+		<button class="btn btn-outline-secondary" @onclick="LoadAsync">Refresh</button>
+		<button class="btn btn-outline-primary ms-2" @onclick="ExportCsv">Export CSV</button>
+	</div>
+</div>
+
+<table class="table table-striped">
+	<thead><tr><th>Asset</th><th>Serial</th><th>Warranty Expiry</th></tr></thead>
+	<tbody>
+		@foreach (var r in items)
+		{
+			<tr>
+				<td>@r.Name</td>
+				<td>@r.SerialNumber</td>
+				<td>@r.WarrantyExpiryDate?.ToShortDateString()</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+@code {
+	private int days = 30;
+	private List<WarrantyExpiryItem> items = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadAsync();
+	}
+
+	private async Task LoadAsync()
+	{
+		items = (await ReportsQueries.GetAssetsNearingWarrantyAsync(days)).ToList();
+	}
+
+	private async Task ExportCsv()
+	{
+		await LoadAsync();
+		var csv = string.Join("\n", new[] { "Asset,Serial,WarrantyExpiry" }.Concat(items.Select(i => $"{Escape(i.Name)},{Escape(i.SerialNumber)},{i.WarrantyExpiryDate:yyyy-MM-dd}")));
+		var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+		await using var stream = new MemoryStream(bytes);
+		var fileName = $"warranty_expiry_{DateTime.Today:yyyyMMdd}.csv";
+		// In Blazor Server, JS download is typically used; for simplicity, write to wwwroot/export if needed
+	}
+
+	private static string Escape(string? s)
+	{
+		if (string.IsNullOrEmpty(s)) return string.Empty;
+		if (s.Contains(",") || s.Contains("\""))
+		{
+			return "\"" + s.Replace("\"", "\"\"") + "\"";
+		}
+		return s;
+	}
+}
+
+

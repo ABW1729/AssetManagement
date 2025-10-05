@@ -1,0 +1,139 @@
+@page "/assignments"
+@attribute [Authorize]
+@using AssetManagement.Application.Services
+@using AssetManagement.Domain.Entities
+@using AssetManagement.Domain.Enums
+@inject IAssignmentsService AssignmentsService
+@inject IAssetsService AssetsService
+@inject IEmployeesService EmployeesService
+
+<h3>Asset Assignments</h3>
+
+<div class="row g-2 mb-2">
+	<div class="col-md-3">
+		<select class="form-select" @bind=filterAssetId>
+			<option value="">All Assets</option>
+			@foreach (var a in availableAssets.Concat(allAssets.Where(a => !availableAssets.Any(x => x.Id == a.Id))))
+			{
+				<option value="@a.Id">@a.Name (@a.SerialNumber)</option>
+			}
+		</select>
+	</div>
+	<div class="col-md-3">
+		<select class="form-select" @bind=filterEmployeeId>
+			<option value="">All Employees</option>
+			@foreach (var e in employees)
+			{
+				<option value="@e.Id">@e.FullName</option>
+			}
+		</select>
+	</div>
+	<div class="col-md-2">
+		<button class="btn btn-outline-secondary" @onclick="LoadAsync">Filter</button>
+	</div>
+</div>
+
+<EditForm Model="assignModel" OnValidSubmit="AssignAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+	<div class="row g-2">
+		<div class="col-md-4">
+			<select class="form-select" @bind=assignModel.AssetId>
+				<option value="">Select Asset (Available only)</option>
+				@foreach (var a in availableAssets)
+				{
+					<option value="@a.Id">@a.Name (@a.SerialNumber)</option>
+				}
+			</select>
+		</div>
+		<div class="col-md-4">
+			<select class="form-select" @bind=assignModel.EmployeeId>
+				<option value="">Select Employee</option>
+				@foreach (var e in employees)
+				{
+					<option value="@e.Id">@e.FullName</option>
+				}
+			</select>
+		</div>
+		<div class="col-md-3">
+			<InputDate class="form-control" @bind-Value="assignModel.AssignedDate" />
+		</div>
+		<div class="col-md-1">
+			<button class="btn btn-primary" type="submit">Assign</button>
+		</div>
+	</div>
+	<div class="row g-2 mt-1">
+		<div class="col-md-12">
+			<InputText class="form-control" @bind-Value="assignModel.Notes" placeholder="Notes (optional)" />
+		</div>
+	</div>
+</EditForm>
+
+<h5 class="mt-4">Assignment History</h5>
+<table class="table table-striped">
+	<thead><tr><th>Asset</th><th>Employee</th><th>Assigned</th><th>Returned</th><th></th></tr></thead>
+	<tbody>
+		@foreach (var h in history)
+		{
+			<tr>
+				<td>@h.Asset?.Name</td>
+				<td>@h.Employee?.FullName</td>
+				<td>@h.AssignedDate.ToShortDateString()</td>
+				<td>@(h.ReturnedDate?.ToShortDateString() ?? "-")</td>
+				<td>
+					@if (!h.ReturnedDate.HasValue)
+					{
+						<button class="btn btn-sm btn-outline-secondary" @onclick="(() => ReturnAsync(h.Id))">Mark Returned</button>
+					}
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+@code {
+    private List<Asset> availableAssets = new();
+    private List<Asset> allAssets = new();
+	private List<Employee> employees = new();
+    private List<AssetAssignment> history = new();
+    private int? filterAssetId;
+    private int? filterEmployeeId;
+
+	private AssignModel assignModel = new() { AssignedDate = DateTime.Today };
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadAsync();
+	}
+
+	private async Task LoadAsync()
+	{
+        availableAssets = (await AssetsService.GetAsync(null, null, AssetStatus.Available, null, null, null, false, 1, 100)).Items.ToList();
+        allAssets = (await AssetsService.GetAsync(null, null, null, null, null, null, false, 1, 1000)).Items.ToList();
+		employees = (await EmployeesService.GetAsync(null, 1, 100)).Items.ToList();
+        history = (await AssignmentsService.GetHistoryAsync(filterAssetId, filterEmployeeId, 1, 50)).Items.ToList();
+	}
+
+	private async Task AssignAsync()
+	{
+		await AssignmentsService.AssignAsync(assignModel.AssetId, assignModel.EmployeeId, assignModel.AssignedDate, assignModel.Notes);
+		assignModel = new AssignModel { AssignedDate = DateTime.Today };
+		await LoadAsync();
+	}
+
+	private async Task ReturnAsync(int assignmentId)
+	{
+		await AssignmentsService.ReturnAsync(assignmentId, DateTime.Today, null);
+		await LoadAsync();
+	}
+
+	private class AssignModel
+	{
+		public int AssetId { get; set; }
+		public int EmployeeId { get; set; }
+		public DateTime AssignedDate { get; set; }
+		public string? Notes { get; set; }
+	}
+}
+
+

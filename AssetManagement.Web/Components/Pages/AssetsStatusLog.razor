@@ -1,0 +1,35 @@
+@page "/asset-status-log"
+@attribute [Authorize]
+@using AssetManagement.Infrastructure.Persistence
+@using AssetManagement.Domain.Entities
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext Db
+
+<h3>Asset Status Changes</h3>
+
+<table class="table table-striped">
+	<thead><tr><th>Asset</th><th>Old</th><th>New</th><th>Changed At (UTC)</th><th>Note</th></tr></thead>
+	<tbody>
+		@foreach (var l in logs)
+		{
+			<tr>
+				<td>@l.Asset?.Name</td>
+				<td>@l.OldStatus</td>
+				<td>@l.NewStatus</td>
+				<td>@l.ChangedAt</td>
+				<td>@l.Note</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+@code {
+	private List<AssetStatusLog> logs = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		logs = await Db.AssetStatusLogs.Include(l => l.Asset).OrderByDescending(l => l.ChangedAt).Take(200).ToListAsync();
+	}
+}
+
+

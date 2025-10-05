@@ -1,0 +1,157 @@
+@page "/employees"
+@attribute [Authorize]
+@using AssetManagement.Application.Services
+@using AssetManagement.Domain.Entities
+@inject IEmployeesService EmployeesService
+
+<h3>Employees</h3>
+
+<div class="mb-2">
+	<input @bind=search class="form-control" placeholder="Search name or email" />
+</div>
+
+<button class="btn btn-primary mb-2" @onclick="ShowAdd">Add Employee</button>
+
+@if (isEditing)
+{
+    <EditForm Model="editModel" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+		<div class="row g-2">
+			<div class="col-md-4">
+				<InputText class="form-control" @bind-Value="editModel.FullName" placeholder="Full Name" />
+			</div>
+			<div class="col-md-3">
+				<InputText class="form-control" @bind-Value="editModel.Department" placeholder="Department" />
+			</div>
+			<div class="col-md-3">
+				<InputText class="form-control" @bind-Value="editModel.Email" placeholder="Email" />
+			</div>
+			<div class="col-md-2">
+				<InputText class="form-control" @bind-Value="editModel.PhoneNumber" placeholder="Phone" />
+			</div>
+		</div>
+		<div class="row g-2 mt-1">
+			<div class="col-md-3">
+				<InputText class="form-control" @bind-Value="editModel.Designation" placeholder="Designation" />
+			</div>
+			<div class="col-md-2 form-check">
+				<input class="form-check-input" type="checkbox" @bind="editModel.IsActive" />
+				<label class="form-check-label">Active</label>
+			</div>
+			<div class="col-md-3">
+				<button type="submit" class="btn btn-success">Save</button>
+				<button type="button" class="btn btn-secondary ms-2" @onclick="CancelEdit">Cancel</button>
+			</div>
+		</div>
+	</EditForm>
+}
+
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Full Name</th>
+			<th>Department</th>
+			<th>Email</th>
+			<th>Phone</th>
+			<th>Designation</th>
+			<th>Status</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var e in items)
+		{
+			<tr>
+				<td>@e.FullName</td>
+				<td>@e.Department</td>
+				<td>@e.Email</td>
+				<td>@e.PhoneNumber</td>
+				<td>@e.Designation</td>
+				<td>@(e.IsActive ? "Active" : "Inactive")</td>
+				<td>
+					<button class="btn btn-sm btn-outline-primary" @onclick="(() => Edit(e))">Edit</button>
+					<button class="btn btn-sm btn-outline-danger ms-1" @onclick="(() => DeleteAsync(e.Id))">Delete</button>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
+
+<div>
+	<button class="btn btn-outline-secondary" @onclick="PrevPage" disabled="@(_page==1)">Prev</button>
+	<span class="mx-2">Page @_page</span>
+	<button class="btn btn-outline-secondary" @onclick="NextPage" disabled="@(items.Count < _pageSize)">Next</button>
+</div>
+
+@code {
+	private List<Employee> items = new();
+	private string? search;
+	private int _page = 1;
+	private int _pageSize = 10;
+	private bool isEditing = false;
+	private Employee editModel = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadAsync();
+	}
+
+	private async Task LoadAsync()
+	{
+		var result = await EmployeesService.GetAsync(search, _page, _pageSize);
+		items = result.Items.ToList();
+		StateHasChanged();
+	}
+
+	private void ShowAdd()
+	{
+		isEditing = true;
+		editModel = new Employee { IsActive = true };
+	}
+
+	private void Edit(Employee e)
+	{
+		isEditing = true;
+		editModel = new Employee
+		{
+			Id = e.Id,
+			FullName = e.FullName,
+			Department = e.Department,
+			Email = e.Email,
+			PhoneNumber = e.PhoneNumber,
+			Designation = e.Designation,
+			IsActive = e.IsActive
+		};
+	}
+
+	private void CancelEdit() => isEditing = false;
+
+	private async Task SaveAsync()
+	{
+		if (editModel.Id == 0)
+			await EmployeesService.CreateAsync(editModel);
+		else
+			await EmployeesService.UpdateAsync(editModel);
+		isEditing = false;
+		await LoadAsync();
+	}
+
+	private async Task DeleteAsync(int id)
+	{
+		await EmployeesService.DeleteAsync(id);
+		await LoadAsync();
+	}
+
+	private async Task PrevPage()
+	{
+		if (_page > 1) { _page--; await LoadAsync(); }
+	}
+
+	private async Task NextPage()
+	{
+		_page++; await LoadAsync();
+	}
+}
+
+

@@ -1,0 +1,46 @@
+@page "/dashboard"
+@attribute [Authorize]
+@using AssetManagement.Application.Dashboard
+@inject IDashboardQueries DashboardQueries
+
+<h3>Dashboard</h3>
+
+@if (counts is null)
+{
+	<p>Loading...</p>
+}
+else
+{
+	<div class="row g-3">
+		<div class="col-md-2"><div class="card p-3">Total <h4>@counts.Total</h4></div></div>
+		<div class="col-md-2"><div class="card p-3">Assigned <h4>@counts.Assigned</h4></div></div>
+		<div class="col-md-2"><div class="card p-3">Available <h4>@counts.Available</h4></div></div>
+		<div class="col-md-2"><div class="card p-3">Under Repair <h4>@counts.UnderRepair</h4></div></div>
+		<div class="col-md-2"><div class="card p-3">Retired <h4>@counts.Retired</h4></div></div>
+		<div class="col-md-2"><div class="card p-3">Spare <h4>@counts.Spare</h4></div></div>
+	</div>
+
+	<h5 class="mt-4">Assets by Type</h5>
+	<table class="table table-sm">
+		<thead><tr><th>Type</th><th>Count</th></tr></thead>
+		<tbody>
+			@foreach (var t in byType)
+			{
+				<tr><td>@t.AssetType</td><td>@t.Count</td></tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	private AssetCounts? counts;
+	private List<(string AssetType, int Count)> byType = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		counts = await DashboardQueries.GetCountsAsync();
+		byType = (await DashboardQueries.GetCountsByTypeAsync()).ToList();
+	}
+}
+
+
