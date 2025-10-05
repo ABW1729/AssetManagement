@@ -13,7 +13,7 @@ A Blazor Web App (Server) for managing employees, assets, assignments, and a das
 - SQL Server (Express OK)
 
 ## Setup
-1. Update connection string in `AssetManagement.Web/appsettings.json` if needed.
+1. Update connection string in `AssetManagement.Web/appsettings.json` .
 2. Apply EF migrations:
    ```bash
    dotnet ef database update -s AssetManagement.Web/AssetManagement.Web.csproj -p AssetManagement.Infrastructure/AssetManagement.Infrastructure.csproj
